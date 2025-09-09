@@ -1,12 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { ChatInterface } from "@/components/chat/ChatInterface";
 
 const Index = () => {
+  const handleSendMessage = async (message: string) => {
+    // This would integrate with your LangGraph backend
+    // For now, it's handled by the ChatInterface's demo mode
+    console.log("Sending message to LangGraph:", message);
+  };
+
+  const handleNewSession = () => {
+    console.log("Starting new session");
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="h-screen w-full">
+      <ChatInterface
+        onSendMessage={handleSendMessage}
+        onNewSession={handleNewSession}
+      />
     </div>
   );
 };

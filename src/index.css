@@ -8,35 +8,68 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Element UI inspired color system */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 220 13% 26%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 13% 26%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 13% 26%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Element UI blue */
+    --primary: 212 100% 48%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 212 100% 95%;
+    --primary-lighter: 212 100% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Professional gray */
+    --secondary: 220 13% 95%;
+    --secondary-foreground: 220 13% 46%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 13% 46%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 212 100% 95%;
+    --accent-foreground: 212 100% 48%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Success green */
+    --success: 103 35% 53%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 103 35% 95%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Warning orange */
+    --warning: 38 92% 56%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 38 92% 95%;
 
-    --radius: 0.5rem;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 212 100% 48%;
+
+    --radius: 0.375rem;
+
+    /* Chat-specific colors */
+    --chat-user: 212 100% 48%;
+    --chat-user-foreground: 0 0% 100%;
+    --chat-assistant: 0 0% 100%;
+    --chat-assistant-foreground: 220 13% 26%;
+    --chat-system: 103 35% 95%;
+    --chat-system-foreground: 103 35% 25%;
+
+    /* Streaming animation */
+    --streaming-gradient: linear-gradient(90deg, 
+      hsl(var(--primary)) 0%, 
+      hsl(var(--primary) / 0.6) 50%, 
+      hsl(var(--primary)) 100%);
+
+    /* Transitions */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +133,26 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  .chat-message-user {
+    @apply bg-chat-user text-chat-user-foreground;
+  }
+  
+  .chat-message-assistant {
+    @apply bg-chat-assistant text-chat-assistant-foreground border border-border;
+  }
+  
+  .chat-message-system {
+    @apply bg-chat-system text-chat-system-foreground;
+  }
+  
+  .streaming-dots::after {
+    content: "●●●";
+    animation: streaming 1.5s ease-in-out infinite;
+    color: hsl(var(--primary));
   }
 }
