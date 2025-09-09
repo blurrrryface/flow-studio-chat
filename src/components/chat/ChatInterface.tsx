@@ -224,6 +224,18 @@ export const ChatInterface = ({
     }
   };
 
+  const handleBranchSelect = (branch: string) => {
+    // TODO: 实现分支切换逻辑，可能需要调用 API 切换到指定分支
+    console.log('切换到分支:', branch);
+    toast.info(`切换到分支: ${branch}`);
+    
+    // 更新当前状态
+    setConversationState(prev => ({
+      ...prev,
+      currentState: branch
+    }));
+  };
+
   const handleConfigChange = (newConfig: LangGraphConfig) => {
     setApiConfig(newConfig);
     setCurrentSessionId(null); // Reset session when config changes
@@ -312,6 +324,7 @@ export const ChatInterface = ({
       <ContextPanel 
         conversationState={conversationState}
         isVisible={showContext}
+        onBranchSelect={handleBranchSelect}
       />
     </div>
   );

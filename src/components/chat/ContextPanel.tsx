@@ -1,15 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConversationState } from "@/types/chat";
-import { Brain, GitBranch, Database, Activity } from "lucide-react";
+import { Brain, GitBranch, Activity } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 
 interface ContextPanelProps {
   conversationState: ConversationState;
   isVisible: boolean;
+  onBranchSelect?: (branch: string) => void;
 }
 
-export const ContextPanel = ({ conversationState, isVisible }: ContextPanelProps) => {
+export const ContextPanel = ({ conversationState, isVisible, onBranchSelect }: ContextPanelProps) => {
   if (!isVisible) return null;
 
   return (
@@ -38,65 +40,33 @@ export const ContextPanel = ({ conversationState, isVisible }: ContextPanelProps
             </CardContent>
           </Card>
 
-          {/* Available Branches */}
+          {/* Branch Tree */}
           {conversationState.branches.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <GitBranch className="h-4 w-4 text-warning" />
-                  可用分支
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-1">
-                  {conversationState.branches.map((branch, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {branch}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Memory */}
-          {Object.keys(conversationState.memory).length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Database className="h-4 w-4 text-primary" />
-                  记忆存储
+                  对话分支树
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {Object.entries(conversationState.memory).map(([key, value]) => (
-                    <div key={key} className="text-xs">
-                      <span className="font-medium text-muted-foreground">{key}:</span>
-                      <span className="ml-1 text-foreground">
-                        {typeof value === 'string' ? value : JSON.stringify(value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Metadata */}
-          {Object.keys(conversationState.metadata).length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">元数据</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1">
-                  {Object.entries(conversationState.metadata).map(([key, value]) => (
-                    <div key={key} className="text-xs">
-                      <span className="font-medium text-muted-foreground">{key}:</span>
-                      <span className="ml-1 text-foreground">
-                        {typeof value === 'string' ? value : JSON.stringify(value)}
-                      </span>
+                  {conversationState.branches.map((branch, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-primary/60" />
+                        <div className={`w-4 h-0.5 ${index === conversationState.branches.length - 1 ? 'bg-muted' : 'bg-primary/30'}`} />
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className={`h-6 px-2 text-xs justify-start hover:bg-primary/10 ${
+                          branch === conversationState.currentState ? 'bg-primary/20 text-primary' : ''
+                        }`}
+                        onClick={() => onBranchSelect?.(branch)}
+                      >
+                        {branch}
+                      </Button>
                     </div>
                   ))}
                 </div>
