@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { Client } from '@langchain/langgraph-sdk';
 import { Message, StreamingResponse } from '@/types/chat';
 
 export interface LangGraphConfig {
@@ -10,6 +11,18 @@ export interface LangGraphConfig {
 export const useLangGraphAPI = (config: LangGraphConfig) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const clientRef = useRef<Client | null>(null);
+
+  // Initialize client
+  const getClient = useCallback(() => {
+    if (!clientRef.current) {
+      clientRef.current = new Client({
+        apiUrl: config.baseUrl || 'http://localhost:8123',
+        ...(config.apiKey && { apiKey: config.apiKey })
+      });
+    }
+    return clientRef.current;
+  }, [config]);
 
   const sendMessage = useCallback(async (
     message: string,
@@ -19,52 +32,75 @@ export const useLangGraphAPI = (config: LangGraphConfig) => {
     setIsStreaming(true);
     
     try {
-      const response = await fetch(`${config.baseUrl}/invoke`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(config.apiKey && { 'Authorization': `Bearer ${config.apiKey}` })
-        },
-        body: JSON.stringify({
-          input: {
-            message,
-            session_id: sessionId,
-            graph_id: config.graphId
-          },
-          stream: true
-        })
+      const client = getClient();
+      
+      // Find assistant by graph_id
+      const assistants = await client.assistants.search({ 
+        metadata: { graph_id: config.graphId },
+        limit: 1 
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      
+      if (!assistants || assistants.length === 0) {
+        throw new Error(`No assistant found for graph_id: ${config.graphId}`);
       }
+      
+      const assistant = assistants[0];
+      
+      // Create or get existing thread
+      const streamResponse = client.runs.stream(
+        sessionId,
+        assistant.assistant_id,
+        {
+          input: { messages: [{ role: "human", content: message }] },
+        }
+      );
 
-      // Handle streaming response
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
-      }
-
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.trim() && line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              onStreamChunk?.(data);
-            } catch (e) {
-              console.warn('Failed to parse streaming data:', e);
-            }
+      let accumulatedContent = '';
+      for await (const chunk of streamResponse) {
+        if (chunk.event === 'messages/partial' && chunk.data) {
+          // Handle array of messages
+          const messages = Array.isArray(chunk.data) ? chunk.data : [chunk.data];
+          const lastMessage = messages[messages.length - 1];
+          if (lastMessage?.content) {
+            // Convert MessageContent to string
+            const content = typeof lastMessage.content === 'string' 
+              ? lastMessage.content 
+              : Array.isArray(lastMessage.content) 
+                ? lastMessage.content.map(c => {
+                    if (typeof c === 'string') return c;
+                    if (typeof c === 'object' && c !== null) {
+                      // Handle MessageContentComplex - try common properties
+                      return (c as any).text || (c as any).content || JSON.stringify(c);
+                    }
+                    return String(c);
+                  }).join('')
+                : String(lastMessage.content);
+            accumulatedContent = content;
+            onStreamChunk?.({
+              content: accumulatedContent,
+              isComplete: false
+            });
+          }
+        } else if (chunk.event === 'messages/complete' && chunk.data) {
+          const messages = Array.isArray(chunk.data) ? chunk.data : [chunk.data];
+          const lastMessage = messages[messages.length - 1];
+          if (lastMessage?.content) {
+            const content = typeof lastMessage.content === 'string' 
+              ? lastMessage.content 
+              : Array.isArray(lastMessage.content) 
+                ? lastMessage.content.map(c => {
+                    if (typeof c === 'string') return c;
+                    if (typeof c === 'object' && c !== null) {
+                      // Handle MessageContentComplex - try common properties
+                      return (c as any).text || (c as any).content || JSON.stringify(c);
+                    }
+                    return String(c);
+                  }).join('')
+                : String(lastMessage.content);
+            onStreamChunk?.({
+              content: content,
+              isComplete: true
+            });
           }
         }
       }
@@ -74,67 +110,45 @@ export const useLangGraphAPI = (config: LangGraphConfig) => {
     } finally {
       setIsStreaming(false);
     }
-  }, [config]);
+  }, [config, getClient]);
 
   const createSession = useCallback(async () => {
     try {
-      const response = await fetch(`${config.baseUrl}/sessions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(config.apiKey && { 'Authorization': `Bearer ${config.apiKey}` })
-        },
-        body: JSON.stringify({
-          graph_id: config.graphId
-        })
+      const client = getClient();
+      const thread = await client.threads.create({
+        metadata: { graph_id: config.graphId }
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const session = await response.json();
-      return session.session_id;
+      return thread.thread_id;
     } catch (error) {
       console.error('Error creating session:', error);
       throw error;
     }
-  }, [config]);
+  }, [config, getClient]);
 
   const getSessionState = useCallback(async (sessionId: string) => {
     try {
-      const response = await fetch(`${config.baseUrl}/sessions/${sessionId}/state`, {
-        headers: {
-          ...(config.apiKey && { 'Authorization': `Bearer ${config.apiKey}` })
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      const client = getClient();
+      const state = await client.threads.getState(sessionId);
+      return state;
     } catch (error) {
       console.error('Error getting session state:', error);
       throw error;
     }
-  }, [config]);
+  }, [getClient]);
 
   const testConnection = useCallback(async () => {
     try {
-      const response = await fetch(`${config.baseUrl}/health`, {
-        headers: {
-          ...(config.apiKey && { 'Authorization': `Bearer ${config.apiKey}` })
-        }
-      });
-      
-      setIsConnected(response.ok);
-      return response.ok;
+      const client = getClient();
+      // Test by trying to list assistants
+      await client.assistants.search({ limit: 1 });
+      setIsConnected(true);
+      return true;
     } catch (error) {
+      console.error('Connection test failed:', error);
       setIsConnected(false);
       return false;
     }
-  }, [config]);
+  }, [getClient]);
 
   return {
     sendMessage,
