@@ -32,7 +32,7 @@ export const ChatInterface = ({
   
   // API Configuration
   const [apiConfig, setApiConfig] = useState<LangGraphConfig>({
-    baseUrl: "http://localhost:8000",
+    baseUrl: "http://localhost:4578",
     graphId: "langgraph-app",
     apiKey: ""
   });
