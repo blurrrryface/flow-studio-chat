@@ -37,7 +37,7 @@ export const ChatInterface = ({
     apiKey: ""
   });
   
-  const { sendMessage: sendToLangGraph, createSession, isConnected } = useLangGraphAPI(apiConfig);
+  const { sendMessage: sendToLangGraph, createSession, testConnection, isConnected } = useLangGraphAPI(apiConfig);
   
   // Mock conversation state for demo
   const [conversationState, setConversationState] = useState<ConversationState>({
@@ -207,7 +207,10 @@ export const ChatInterface = ({
     setIsStreaming(false);
     
     try {
-      if (isConnected) {
+      // Always test connection first
+      const connected = await testConnection();
+      
+      if (connected) {
         const sessionId = await createSession();
         setCurrentSessionId(sessionId);
         toast.success("已创建新会话并连接到 LangGraph");
@@ -216,7 +219,9 @@ export const ChatInterface = ({
         toast.success("已创建新演示会话");
       }
     } catch (error) {
+      console.error("创建会话失败:", error);
       toast.error("创建会话失败: " + (error as Error).message);
+      setCurrentSessionId(null);
     }
     
     if (onNewSession) {
