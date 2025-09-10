@@ -26,9 +26,11 @@ export const useLangGraphAPI = (config: LangGraphConfig) => {
           ...(config.apiKey && { 'Authorization': `Bearer ${config.apiKey}` })
         },
         body: JSON.stringify({
-          message,
-          session_id: sessionId,
-          graph_id: config.graphId,
+          input: {
+            message,
+            session_id: sessionId,
+            graph_id: config.graphId
+          },
           stream: true
         })
       });
