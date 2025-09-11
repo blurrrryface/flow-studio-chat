@@ -68,7 +68,7 @@ export const useLangGraphAPI = (config: LangGraphConfig) => {
                 const data = JSON.parse(jsonStr);
                 if (data.content !== undefined) {
                   // For typewriter effect, append new content to accumulated content
-                  accumulatedContent ++= data.content;
+                  accumulatedContent += data.content;
                   onStreamChunk?.({
                     content: accumulatedContent,
                     isComplete: data.isComplete || false,
