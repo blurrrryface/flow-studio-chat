@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Message } from "@/types/chat";
 import { User, Bot, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ToolDisplay } from "./ToolDisplay";
 
 interface MessageBubbleProps {
   message: Message;
@@ -53,6 +54,15 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           )}
         </div>
         
+        {/* Tool Display */}
+        {(message.metadata?.tools || message.metadata?.tool_calls) && (
+          <ToolDisplay 
+            tools={message.metadata.tools || message.metadata.tool_calls || []}
+            state={message.metadata.state}
+            className="max-w-full"
+          />
+        )}
+        
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
             {message.timestamp.toLocaleTimeString()}
@@ -64,9 +74,9 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
             </Badge>
           )}
           
-          {message.metadata?.tools && message.metadata.tools.length > 0 && (
+          {(message.metadata?.tools || message.metadata?.tool_calls) && (
             <Badge variant="outline" className="text-xs">
-              {message.metadata.tools.length} tools
+              {(message.metadata.tools || message.metadata.tool_calls || []).length} tools
             </Badge>
           )}
         </div>

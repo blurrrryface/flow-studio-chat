@@ -163,7 +163,10 @@ export const ChatInterface = ({
       isStreaming: true,
       metadata: {
         state: "generating",
-        tools: ["knowledge_base", "code_generation"]
+        tools: [
+          { name: "knowledge_base", status: "pending" as const },
+          { name: "code_generation", status: "pending" as const }
+        ]
       }
     };
 

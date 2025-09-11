@@ -1,3 +1,10 @@
+export interface ToolCall {
+  name: string;
+  args?: Record<string, any>;
+  result?: any;
+  status?: 'pending' | 'success' | 'error';
+}
+
 export interface Message {
   id: string;
   type: 'user' | 'assistant' | 'system';
@@ -8,7 +15,8 @@ export interface Message {
     state?: string;
     branch?: string;
     memory?: Record<string, any>;
-    tools?: string[];
+    tools?: ToolCall[];
+    tool_calls?: ToolCall[]; // Alternative naming from backend
   };
 }
 
