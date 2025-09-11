@@ -61,7 +61,7 @@ export const useLangGraphAPI = (config: LangGraphConfig) => {
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.content) {
-                  accumulatedContent = data.content;
+                  accumulatedContent += data.content;
                   onStreamChunk?.({
                     content: accumulatedContent,
                     isComplete: data.isComplete || false,
