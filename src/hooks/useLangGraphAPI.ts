@@ -59,8 +59,14 @@ export const useLangGraphAPI = (config: LangGraphConfig) => {
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               try {
-                const data = JSON.parse(line.slice(6));
-                if (data.content) {
+                // Handle both "data: {...}" and "data: data: {...}" formats
+                let jsonStr = line.slice(6);
+                if (jsonStr.startsWith('data: ')) {
+                  jsonStr = jsonStr.slice(6);
+                }
+                
+                const data = JSON.parse(jsonStr);
+                if (data.content !== undefined) {
                   accumulatedContent = data.content;
                   onStreamChunk?.({
                     content: accumulatedContent,
