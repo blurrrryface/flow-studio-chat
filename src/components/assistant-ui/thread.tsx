@@ -197,7 +197,7 @@ const AssistantMessage: FC = () => {
   return (
     <MessagePrimitive.Root className="aui-assistant-message-root">
       <div className="aui-assistant-message-content">
-        <MessagePrimitive.Parts components={{ Text: MarkdownText }} />
+        <MessagePrimitive.Parts />
       </div>
       <AssistantActionBar />
       <BranchPicker />
