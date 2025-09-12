@@ -3,6 +3,7 @@ import { Message } from "@/types/chat";
 import { User, Bot, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ToolDisplay } from "./ToolDisplay";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface MessageBubbleProps {
   message: Message;
@@ -20,6 +21,14 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         return <Settings className="h-4 w-4" />;
       default:
         return <Bot className="h-4 w-4" />;
+    }
+  };
+
+  const renderContent = () => {
+    if (isUser) {
+      return <span className="text-sm">{message.content}</span>;
+    } else {
+      return <MarkdownRenderer content={message.content} />;
     }
   };
 
@@ -42,13 +51,13 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         isUser && "items-end"
       )}>
         <div className={cn(
-          "rounded-lg px-4 py-2 text-sm transition-all duration-200",
+          "rounded-lg px-4 py-2 transition-all duration-200",
           isUser && "chat-message-user",
           !isUser && !isSystem && "chat-message-assistant shadow-sm",
           isSystem && "chat-message-system",
           message.isStreaming && "animate-pulse-subtle"
         )}>
-          {message.content}
+          {renderContent()}
           {message.isStreaming && (
             <span className="ml-2 streaming-dots"></span>
           )}

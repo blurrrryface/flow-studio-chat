@@ -191,4 +191,30 @@ All colors MUST be HSL.
   .aui-composer-input {
     @apply flex-1 resize-none border-0 outline-none bg-transparent placeholder:text-muted-foreground;
   }
+  
+  /* Animations */
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes streaming {
+    0%, 20% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+  
+  .animate-pulse-subtle {
+    animation: streaming 2s ease-in-out infinite;
+  }
 }
