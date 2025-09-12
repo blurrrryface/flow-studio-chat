@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "@assistant-ui/styles/default-theme.css";
+@import "@assistant-ui/styles/tailwind.css";
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -154,5 +157,38 @@ All colors MUST be HSL.
     content: "●●●";
     animation: streaming 1.5s ease-in-out infinite;
     color: hsl(var(--primary));
+  }
+
+  /* Assistant UI custom styles */
+  .aui-thread-root {
+    @apply flex flex-col h-full max-w-4xl mx-auto;
+  }
+  
+  .aui-thread-viewport {
+    @apply flex-1 flex flex-col overflow-hidden;
+  }
+  
+  .aui-thread-welcome-root {
+    @apply flex flex-col items-center justify-center p-8 text-center;
+  }
+  
+  .aui-thread-welcome-message {
+    @apply text-lg text-muted-foreground mb-4;
+  }
+  
+  .aui-thread-welcome-suggestions {
+    @apply flex flex-wrap gap-2 justify-center;
+  }
+  
+  .aui-thread-welcome-suggestion {
+    @apply px-3 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm hover:bg-accent cursor-pointer transition-colors;
+  }
+  
+  .aui-composer-root {
+    @apply flex gap-2 p-4 border-t;
+  }
+  
+  .aui-composer-input {
+    @apply flex-1 resize-none border-0 outline-none bg-transparent placeholder:text-muted-foreground;
   }
 }
