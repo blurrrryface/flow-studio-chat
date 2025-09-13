@@ -1,10 +1,10 @@
 import { useExternalStoreRuntime } from "@assistant-ui/react";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { Message as ChatMessage, ToolCall } from "@/types/chat";
 import type { AppendMessage, ThreadMessageLike } from "@assistant-ui/react";
 
 // Convert our Message format to assistant-ui format
-const convertToAssistantUIMessage = (message: ChatMessage): ThreadMessageLike => {
+const convertMessage = (message: ChatMessage): ThreadMessageLike => {
   if (message.type === 'user') {
     return {
       id: message.id,
@@ -87,11 +87,6 @@ export const useAssistantUIRuntime = ({
 }: ExternalStoreRuntimeProps) => {
   const [isRunning, setIsRunning] = useState(false);
 
-  // Convert messages to assistant-ui format
-  const assistantMessages = useMemo(() => {
-    return messages.map(convertToAssistantUIMessage);
-  }, [messages]);
-
   const handleSend = useCallback(async (message: AppendMessage) => {
     if (message.content[0]?.type !== "text") {
       throw new Error("Only text messages are supported");
@@ -111,11 +106,11 @@ export const useAssistantUIRuntime = ({
     onStopStreaming?.();
   }, [onStopStreaming]);
 
-  // Create the runtime using useExternalStoreRuntime
+  // Create the runtime using useExternalStoreRuntime with proper configuration
   const runtime = useExternalStoreRuntime({
     isRunning: isStreaming || isRunning,
-    messages: assistantMessages,
-    convertMessage: (message: ThreadMessageLike) => message, // Identity function since we're already converted
+    messages,
+    convertMessage,
     onNew: handleSend,
     onCancel: handleCancel,
     onEdit: async (message: AppendMessage) => {
