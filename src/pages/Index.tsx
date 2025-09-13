@@ -1,11 +1,12 @@
 import React from "react";
-import { EnhancedThread } from "@/components/assistant-ui/enhanced-thread";
 import { GraphStateSidebar } from "@/components/sidebar/GraphStateSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ConversationState, Message } from "@/types/chat";
 
 const Index = () => {
   console.log("Index component starting to render");
+  
+  // Start with simple state
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = React.useState(false);
   console.log("Index component state initialized, messages:", messages.length);
@@ -18,7 +19,7 @@ const Index = () => {
       user_intent: "weather_query",
       location: "beijing",
       context_count: 3,
-      ui_mode: "assistant-ui"
+      ui_mode: "simple"
     },
     branches: ["search", "generate", "validate"],
     metadata: {
@@ -52,6 +53,8 @@ const Index = () => {
     setIsStreaming(false);
   };
 
+  console.log("About to render Index JSX");
+
   return (
     <div className="flex min-h-screen w-full">
       <GraphStateSidebar
@@ -67,23 +70,25 @@ const Index = () => {
             <SidebarTrigger />
             <div className="ml-4">
               <h1 className="text-sm font-semibold">
-                LangGraph Chat Interface (Assistant UI)
+                LangGraph Chat Interface (Simple Mode)
               </h1>
             </div>
           </div>
         </header>
 
-        {/* Main chat area */}
-        <main className="flex-1">
-          <EnhancedThread
-            messages={messages}
-            isStreaming={isStreaming}
-            onSendMessage={handleSendMessage}
-            onStopStreaming={handleStopStreaming}
-            onNewSession={handleNewSession}
-            conversationState={conversationState}
-            className="h-full"
-          />
+        {/* Main chat area - temporarily simplified */}
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center p-8">
+            <h2 className="text-lg font-semibold mb-2">Chat Interface Loading...</h2>
+            <p className="text-muted-foreground">Messages: {messages.length}</p>
+            <p className="text-muted-foreground">Streaming: {isStreaming.toString()}</p>
+            <button 
+              onClick={() => console.log("Test button clicked")}
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
+            >
+              Test Button
+            </button>
+          </div>
         </main>
       </div>
     </div>
