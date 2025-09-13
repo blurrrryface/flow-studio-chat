@@ -1,13 +1,10 @@
 import React from "react";
-import { ChatInterface } from "@/components/chat/ChatInterface";
 import { EnhancedThread } from "@/components/assistant-ui/enhanced-thread";
 import { GraphStateSidebar } from "@/components/sidebar/GraphStateSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { ConversationState, Message } from "@/types/chat";
 
 const Index = () => {
-  const [useAssistantUI, setUseAssistantUI] = React.useState(false);
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = React.useState(false);
 
@@ -19,7 +16,7 @@ const Index = () => {
       user_intent: "weather_query",
       location: "beijing",
       context_count: 3,
-      ui_mode: useAssistantUI ? "assistant-ui" : "custom"
+      ui_mode: "assistant-ui"
     },
     branches: ["search", "generate", "validate"],
     metadata: {
@@ -68,37 +65,23 @@ const Index = () => {
             <SidebarTrigger />
             <div className="ml-4">
               <h1 className="text-sm font-semibold">
-                LangGraph Chat Interface {useAssistantUI ? "(Assistant UI)" : "(Custom)"}
+                LangGraph Chat Interface (Assistant UI)
               </h1>
             </div>
           </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setUseAssistantUI(!useAssistantUI)}
-            className="text-xs"
-          >
-            切换到 {useAssistantUI ? "自定义界面" : "Assistant UI"}
-          </Button>
         </header>
 
         {/* Main chat area */}
         <main className="flex-1">
-          {useAssistantUI ? (
-            <EnhancedThread
-              messages={messages}
-              isStreaming={isStreaming}
-              onSendMessage={handleSendMessage}
-              onStopStreaming={handleStopStreaming}
-              className="h-full"
-            />
-          ) : (
-            <ChatInterface
-              onSendMessage={handleSendMessage}
-              onNewSession={handleNewSession}
-            />
-          )}
+          <EnhancedThread
+            messages={messages}
+            isStreaming={isStreaming}
+            onSendMessage={handleSendMessage}
+            onStopStreaming={handleStopStreaming}
+            onNewSession={handleNewSession}
+            conversationState={conversationState}
+            className="h-full"
+          />
         </main>
       </div>
     </div>
