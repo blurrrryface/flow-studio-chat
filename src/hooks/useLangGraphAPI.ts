@@ -156,7 +156,8 @@ export const useLangGraphAPI = (config: LangGraphConfig) => {
         return false;
       }
     } catch (error) {
-      console.error('Connection test failed:', error);
+      // Silently handle connection failures (likely CORS or network issues)
+      // This is expected when backend is not running or CORS is not configured
       setIsConnected(false);
       return false;
     }
