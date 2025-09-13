@@ -202,9 +202,9 @@ export const ChatInterface = ({
                 });
               }
             });
-          } else if (chunk.metadata?.tool) {
-            // 处理单个工具调用信息（后端返回的是单个tool字段）
-            const tool = chunk.metadata.tool;
+          } else if (chunk.metadata?.tools && chunk.metadata.tools.length === 1) {
+            // 处理单个工具调用信息（后端返回的是tools数组）
+            const tool = chunk.metadata.tools[0];
             
             // 如果工具已有结果，则更新现有工具调用消息
             if (tool.result && (tool.status === 'success' || tool.status === 'error')) {

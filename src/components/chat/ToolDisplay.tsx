@@ -75,7 +75,7 @@ const getStatusIcon = (status?: string) => {
   }
 };
 
-const formatArgs = (args: Record<string, any>) => {
+const formatArgs = (args: Record<string, any> | string) => {
   if (typeof args === 'string') {
     try {
       const parsed = JSON.parse(args);

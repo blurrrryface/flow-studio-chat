@@ -1,13 +1,11 @@
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
-import { useAssistantRuntime } from "@/hooks/useAssistantRuntime";
 
 interface AssistantUIProviderProps {
   children: React.ReactNode;
+  runtime: any; // Accept runtime as prop instead of creating it
 }
 
-export const AssistantUIProvider = ({ children }: AssistantUIProviderProps) => {
-  const runtime = useAssistantRuntime();
-
+export const AssistantUIProvider = ({ children, runtime }: AssistantUIProviderProps) => {
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       {children}
