@@ -121,9 +121,23 @@ export const ChatInterface = ({
                     content: chunk.content,
                     isStreaming: !chunk.isComplete,
                     metadata: {
-                      ...msg.metadata,
                       state: chunk.metadata?.state || "generating",
-                      memory: chunk.metadata?.memory
+                      memory: chunk.metadata?.memory,
+                      tools: chunk.metadata?.tools || []
+                    }
+                  }
+                : msg
+            ));
+          } else if (chunk.metadata) {
+            // Handle metadata-only updates (like tool calling status)
+            setMessages(prev => prev.map(msg => 
+              msg.id === assistantMessage.id 
+                ? { 
+                    ...msg,
+                    metadata: {
+                      state: chunk.metadata?.state || "generating",
+                      memory: chunk.metadata?.memory,
+                      tools: chunk.metadata?.tools || []
                     }
                   }
                 : msg
@@ -210,7 +224,7 @@ export const ChatInterface = ({
     setIsStreaming(false);
     
     try {
-      // Always test connection first
+      // Test connection first, but don't fail if it's not available
       const connected = await testConnection();
       
       if (connected) {
@@ -219,12 +233,12 @@ export const ChatInterface = ({
         toast.success("已创建新会话并连接到 LangGraph");
       } else {
         setCurrentSessionId(null);
-        toast.success("已创建新演示会话");
+        toast.info("无法连接到 LangGraph 后端，使用演示模式");
       }
     } catch (error) {
-      console.error("创建会话失败:", error);
-      toast.error("创建会话失败: " + (error as Error).message);
+      // Handle any unexpected errors gracefully
       setCurrentSessionId(null);
+      toast.info("无法连接到 LangGraph 后端，使用演示模式");
     }
     
     if (onNewSession) {
