@@ -121,9 +121,23 @@ export const ChatInterface = ({
                     content: chunk.content,
                     isStreaming: !chunk.isComplete,
                     metadata: {
-                      ...msg.metadata,
                       state: chunk.metadata?.state || "generating",
-                      memory: chunk.metadata?.memory
+                      memory: chunk.metadata?.memory,
+                      tools: chunk.metadata?.tools || []
+                    }
+                  }
+                : msg
+            ));
+          } else if (chunk.metadata) {
+            // Handle metadata-only updates (like tool calling status)
+            setMessages(prev => prev.map(msg => 
+              msg.id === assistantMessage.id 
+                ? { 
+                    ...msg,
+                    metadata: {
+                      state: chunk.metadata?.state || "generating",
+                      memory: chunk.metadata?.memory,
+                      tools: chunk.metadata?.tools || []
                     }
                   }
                 : msg
