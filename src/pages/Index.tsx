@@ -5,8 +5,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ConversationState, Message } from "@/types/chat";
 
 const Index = () => {
+  console.log("Index component starting to render");
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = React.useState(false);
+  console.log("Index component state initialized, messages:", messages.length);
 
   // Mock conversation state for demonstration
   const [conversationState] = React.useState<ConversationState>({

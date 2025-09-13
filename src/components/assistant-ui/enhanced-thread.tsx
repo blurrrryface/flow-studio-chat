@@ -29,6 +29,7 @@ export const EnhancedThread = ({
   conversationState,
   className
 }: EnhancedThreadProps) => {
+  console.log("EnhancedThread component starting, messages:", messages.length);
   const [showContext, setShowContext] = useState(true);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
@@ -79,12 +80,14 @@ export const EnhancedThread = ({
     testConnection();
   }, [apiConfig]);
 
+  console.log("About to create useAssistantUIRuntime");
   const runtime = useAssistantUIRuntime({
     messages,
     isStreaming,
     onSendMessage: handleSendMessage,
     onStopStreaming
   });
+  console.log("Created runtime:", runtime);
 
   return (
     <AssistantUIProvider runtime={runtime}>

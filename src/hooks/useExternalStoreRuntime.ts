@@ -85,6 +85,7 @@ export const useAssistantUIRuntime = ({
   onSendMessage,
   onStopStreaming
 }: ExternalStoreRuntimeProps) => {
+  console.log("useAssistantUIRuntime hook called with messages:", messages.length);
   const [isRunning, setIsRunning] = useState(false);
 
   const handleSend = useCallback(async (message: AppendMessage) => {
@@ -107,6 +108,7 @@ export const useAssistantUIRuntime = ({
   }, [onStopStreaming]);
 
   // Create the runtime using useExternalStoreRuntime with proper configuration
+  console.log("About to call useExternalStoreRuntime");
   const runtime = useExternalStoreRuntime({
     isRunning: isStreaming || isRunning,
     messages,
@@ -128,6 +130,7 @@ export const useAssistantUIRuntime = ({
       }
     }
   });
+  console.log("useExternalStoreRuntime returned:", runtime);
 
   return runtime;
 };
