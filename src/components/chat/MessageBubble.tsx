@@ -64,8 +64,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         </div>
         
         {/* Tool Display */}
-        {((message.metadata?.tools && message.metadata.tools.length > 0) || 
-          (message.metadata?.tool_calls && message.metadata.tool_calls.length > 0)) && (
+        {(message.metadata?.tools || message.metadata?.tool_calls) && (
           <ToolDisplay 
             tools={message.metadata.tools || message.metadata.tool_calls || []}
             state={message.metadata.state}
@@ -80,17 +79,13 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           
           {message.metadata?.state && (
             <Badge variant="secondary" className="text-xs">
-              {message.metadata.state === 'tool_calling' ? '工具调用中' : 
-               message.metadata.state === 'generating' ? '生成中' :
-               message.metadata.state === 'completed' ? '完成' :
-               message.metadata.state}
+              {message.metadata.state}
             </Badge>
           )}
           
-          {((message.metadata?.tools && message.metadata.tools.length > 0) || 
-            (message.metadata?.tool_calls && message.metadata.tool_calls.length > 0)) && (
+          {(message.metadata?.tools || message.metadata?.tool_calls) && (
             <Badge variant="outline" className="text-xs">
-              {(message.metadata.tools || message.metadata.tool_calls || []).length} 个工具
+              {(message.metadata.tools || message.metadata.tool_calls || []).length} tools
             </Badge>
           )}
         </div>
