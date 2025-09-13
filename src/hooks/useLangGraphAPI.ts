@@ -71,7 +71,7 @@ export const useLangGraphAPI = (config: LangGraphConfig) => {
                 if (data.content !== undefined || data.metadata) {
                   // Only append content if it's new (not empty or same as before)
                   if (data.content && data.content !== accumulatedContent) {
-                    accumulatedContent = data.content; // Use the full content from backend
+                    accumulatedContent += data.content; // Use the full content from backend
                   }
                   
                   onStreamChunk?.({

@@ -7,7 +7,7 @@ export interface ToolCall {
 
 export interface Message {
   id: string;
-  type: 'user' | 'assistant' | 'system';
+  type: 'user' | 'assistant' | 'system' | 'tool_call'; // 添加新的消息类型
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
@@ -43,5 +43,6 @@ export interface StreamingResponse {
   metadata?: {
     state?: string;
     memory?: Record<string, any>;
+    tools?: ToolCall[];
   };
 }

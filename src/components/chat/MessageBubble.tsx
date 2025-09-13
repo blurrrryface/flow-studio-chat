@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Message } from "@/types/chat";
-import { User, Bot, Settings } from "lucide-react";
+import { User, Bot, Settings, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ToolDisplay } from "./ToolDisplay";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -18,6 +18,9 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       case 'user':
         return <User className="h-4 w-4" />;
       case 'system':
+        if (message.metadata?.state === 'tool_calling') {
+          return <Wrench className="h-4 w-4" />;
+        }
         return <Settings className="h-4 w-4" />;
       default:
         return <Bot className="h-4 w-4" />;
@@ -40,6 +43,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       {!isUser && (
         <div className={cn(
           "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md",
+          isSystem && message.metadata?.state === 'tool_calling' ? "bg-primary text-primary-foreground" :
           isSystem ? "bg-warning text-warning-foreground" : "bg-primary text-primary-foreground"
         )}>
           {getIcon()}
@@ -54,6 +58,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           "rounded-lg px-4 py-2 transition-all duration-200",
           isUser && "chat-message-user",
           !isUser && !isSystem && "chat-message-assistant shadow-sm",
+          isSystem && message.metadata?.state === 'tool_calling' ? "bg-primary/10 border border-primary/20" :
           isSystem && "chat-message-system",
           message.isStreaming && "animate-pulse-subtle"
         )}>

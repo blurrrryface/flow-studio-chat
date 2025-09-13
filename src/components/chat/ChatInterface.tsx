@@ -110,10 +110,12 @@ export const ChatInterface = ({
           }
         };
 
+        // 先添加AI回复消息（最后一个位置）
         setMessages(prev => [...prev, assistantMessage]);
 
         await sendToLangGraph(content, currentSessionId, (chunk) => {
           if (chunk.content) {
+            // 更新AI回复消息
             setMessages(prev => prev.map(msg => 
               msg.id === assistantMessage.id 
                 ? { 
@@ -121,27 +123,158 @@ export const ChatInterface = ({
                     content: chunk.content,
                     isStreaming: !chunk.isComplete,
                     metadata: {
-                      state: chunk.metadata?.state || "generating",
+                      state: chunk.metadata?.state || (chunk.isComplete ? "completed" : "generating"),
                       memory: chunk.metadata?.memory,
                       tools: chunk.metadata?.tools || []
                     }
                   }
                 : msg
             ));
-          } else if (chunk.metadata) {
-            // Handle metadata-only updates (like tool calling status)
-            setMessages(prev => prev.map(msg => 
-              msg.id === assistantMessage.id 
-                ? { 
+          } else if (chunk.metadata?.tools && chunk.metadata.tools.length > 0) {
+            // 处理工具调用信息
+            chunk.metadata.tools.forEach((tool: any) => {
+              // 如果工具已有结果，则更新现有工具调用消息
+              if (tool.result && (tool.status === 'success' || tool.status === 'error')) {
+                setMessages(prev => prev.map(msg => {
+                  // 检查是否有对应的工具调用消息
+                  if (msg.type === 'system' && msg.metadata?.tools) {
+                    const updatedTools = msg.metadata.tools.map((t: any) => 
+                      t.name === tool.name && t.status === 'pending'
+                        ? { ...t, result: tool.result, status: tool.status }
+                        : t
+                    );
+                    
+                    return {
+                      ...msg,
+                      metadata: {
+                        ...msg.metadata,
+                        tools: updatedTools,
+                        state: 'completed'
+                      }
+                    };
+                  }
+                  // 同时更新 assistantMessage 中的工具状态和完成状态
+                  else if (msg.id === assistantMessage.id) {
+                    return {
+                      ...msg,
+                      metadata: {
+                        ...msg.metadata,
+                        tools: chunk.metadata.tools || [],
+                        state: 'completed'
+                      }
+                    };
+                  }
+                  return msg;
+                }));
+              } else if (tool.status === 'pending') {
+                // 为每个新的工具调用创建单独的消息，但确保它们插入在AI回复消息之前
+                const toolMessage: Message = {
+                  id: `${Date.now()}-tool-${Math.random().toString(36).substr(2, 9)}`,
+                  type: 'system',
+                  content: `正在调用工具: ${tool.name}`,
+                  timestamp: new Date(),
+                  metadata: {
+                    state: 'tool_calling',
+                    tools: [tool]
+                  }
+                };
+                
+                // 检查是否已有相同的工具调用消息，如果没有则添加到AI回复消息之前
+                setMessages(prev => {
+                  const existingToolCall = prev.find(
+                    msg => msg.type === 'system' && 
+                           msg.metadata?.tools?.some((t: any) => t.name === tool.name && t.status === 'pending')
+                  );
+                  
+                  if (existingToolCall) {
+                    return prev;
+                  }
+                  
+                  // 找到AI回复消息的索引，将工具调用消息插入在它之前
+                  const assistantIndex = prev.findIndex(msg => msg.id === assistantMessage.id);
+                  if (assistantIndex > -1) {
+                    const newMessages = [...prev];
+                    newMessages.splice(assistantIndex, 0, toolMessage);
+                    return newMessages;
+                  }
+                  
+                  return prev;
+                });
+              }
+            });
+          } else if (chunk.metadata?.tool) {
+            // 处理单个工具调用信息（后端返回的是单个tool字段）
+            const tool = chunk.metadata.tool;
+            
+            // 如果工具已有结果，则更新现有工具调用消息
+            if (tool.result && (tool.status === 'success' || tool.status === 'error')) {
+              setMessages(prev => prev.map(msg => {
+                // 检查是否有对应的工具调用消息
+                if (msg.type === 'system' && msg.metadata?.tools) {
+                  const updatedTools = msg.metadata.tools.map((t: any) => 
+                    t.name === tool.name && t.status === 'pending'
+                      ? { ...t, result: tool.result, status: tool.status }
+                      : t
+                  );
+                  
+                  return {
                     ...msg,
                     metadata: {
-                      state: chunk.metadata?.state || "generating",
-                      memory: chunk.metadata?.memory,
-                      tools: chunk.metadata?.tools || []
+                      ...msg.metadata,
+                      tools: updatedTools,
+                      state: 'completed'
                     }
-                  }
-                : msg
-            ));
+                  };
+                }
+                // 同时更新 assistantMessage 中的工具状态和完成状态
+                else if (msg.id === assistantMessage.id) {
+                  return {
+                    ...msg,
+                    isStreaming: false,
+                    metadata: {
+                      ...msg.metadata,
+                      tools: [tool],
+                      state: 'completed'
+                    }
+                  };
+                }
+                return msg;
+              }));
+            } else if (tool.status === 'pending') {
+              // 为新的工具调用创建单独的消息，但确保它们插入在AI回复消息之前
+              const toolMessage: Message = {
+                id: `${Date.now()}-tool-${Math.random().toString(36).substr(2, 9)}`,
+                type: 'system',
+                content: `正在调用工具: ${tool.name}`,
+                timestamp: new Date(),
+                metadata: {
+                  state: 'tool_calling',
+                  tools: [tool]
+                }
+              };
+              
+              // 检查是否已有相同的工具调用消息，如果没有则添加到AI回复消息之前
+              setMessages(prev => {
+                const existingToolCall = prev.find(
+                  msg => msg.type === 'system' && 
+                         msg.metadata?.tools?.some((t: any) => t.name === tool.name && t.status === 'pending')
+                );
+                
+                if (existingToolCall) {
+                  return prev;
+                }
+                
+                // 找到AI回复消息的索引，将工具调用消息插入在它之前
+                const assistantIndex = prev.findIndex(msg => msg.id === assistantMessage.id);
+                if (assistantIndex > -1) {
+                  const newMessages = [...prev];
+                  newMessages.splice(assistantIndex, 0, toolMessage);
+                  return newMessages;
+                }
+                
+                return prev;
+              });
+            }
           }
         });
       } else if (onSendMessage) {
@@ -168,8 +301,8 @@ export const ChatInterface = ({
 
     const fullResponse = responses.join(" ");
     
-    // Create streaming message
-    const streamingMessage: Message = {
+    // Create initial assistant message
+    const assistantMessage: Message = {
       id: (Date.now() + 1).toString(),
       type: 'assistant',
       content: "",
@@ -177,31 +310,105 @@ export const ChatInterface = ({
       isStreaming: true,
       metadata: {
         state: "generating",
-        tools: [
-          { name: "knowledge_base", status: "pending" as const },
-          { name: "code_generation", status: "pending" as const }
-        ]
+        tools: []
       }
     };
 
-    setMessages(prev => [...prev, streamingMessage]);
+    // 先添加AI回复消息（最后一个位置）
+    setMessages(prev => [...prev, assistantMessage]);
 
-    // Simulate streaming
+    // 创建模拟的工具调用消息（独立的消息框），但确保它们插入在AI回复消息之前
+    const tool1: Message = {
+      id: `${Date.now()}-tool1`,
+      type: 'system',
+      content: "正在调用知识库工具...",
+      timestamp: new Date(),
+      metadata: {
+        state: 'tool_calling',
+        tools: [{ name: "knowledge_base", status: "pending" as const }]
+      }
+    };
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setMessages(prev => {
+      const assistantIndex = prev.findIndex(msg => msg.id === assistantMessage.id);
+      if (assistantIndex > -1) {
+        const newMessages = [...prev];
+        newMessages.splice(assistantIndex, 0, tool1);
+        return newMessages;
+      }
+      return prev;
+    });
+
+    // 更新工具状态为完成
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setMessages(prev => prev.map(msg => 
+      msg.id === tool1.id 
+        ? { 
+            ...msg, 
+            metadata: {
+              ...msg.metadata,
+              state: "completed",
+              tools: [{ name: "knowledge_base", status: "success" as const, result: "知识库查询结果示例" }]
+            }
+          } 
+        : msg
+    ));
+
+    // 创建第二个工具调用消息
+    const tool2: Message = {
+      id: `${Date.now()}-tool2`,
+      type: 'system',
+      content: "正在调用代码生成工具...",
+      timestamp: new Date(),
+      metadata: {
+        state: 'tool_calling',
+        tools: [{ name: "code_generation", status: "pending" as const }]
+      }
+    };
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setMessages(prev => {
+      const assistantIndex = prev.findIndex(msg => msg.id === assistantMessage.id);
+      if (assistantIndex > -1) {
+        const newMessages = [...prev];
+        newMessages.splice(assistantIndex, 0, tool2);
+        return newMessages;
+      }
+      return prev;
+    });
+
+    // 更新第二个工具状态为完成
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setMessages(prev => prev.map(msg => 
+      msg.id === tool2.id 
+        ? { 
+            ...msg, 
+            metadata: {
+              ...msg.metadata,
+              state: "completed",
+              tools: [{ name: "code_generation", status: "success" as const, result: "代码生成结果示例" }]
+            }
+          } 
+        : msg
+    ));
+
+    // 流式显示AI回复
     let currentContent = "";
     for (let i = 0; i < fullResponse.length; i++) {
       currentContent += fullResponse[i];
       await new Promise(resolve => setTimeout(resolve, 20));
       
       setMessages(prev => prev.map(msg => 
-        msg.id === streamingMessage.id 
-          ? { ...msg, content: currentContent }
+        msg.id === assistantMessage.id 
+          ? { ...msg, content: currentContent } 
           : msg
       ));
     }
 
-    // Mark as complete
+    // 标记AI回复为完成
     setMessages(prev => prev.map(msg => 
-      msg.id === streamingMessage.id 
+      msg.id === assistantMessage.id 
         ? { 
             ...msg, 
             isStreaming: false,
@@ -209,7 +416,7 @@ export const ChatInterface = ({
               ...msg.metadata,
               state: "completed"
             }
-          }
+          } 
         : msg
     ));
   };
